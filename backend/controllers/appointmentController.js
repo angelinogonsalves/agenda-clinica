@@ -1,24 +1,49 @@
 // controllers/appointmentController.js
 
 import Appointment from '../models/Appointment.js';
+import Patient from '../models/Patient.js';
 
-// Função para criar um agendamento
 export const createAppointment = async (req, res) => {
-    const { patientName, phone, specialty, dateTime, status } = req.body;
+  const { patientName, phone, specialty, dateTime } = req.body;
 
-    try {
-        const existingAppointment = await Appointment.findOne({ dateTime });
-        if (existingAppointment) {
-            return res.status(400).json({ message: 'Já existe um agendamento para este horário.' });
-        }
-
-        const appointment = new Appointment({ patientName, phone, specialty, dateTime, status });
-        await appointment.save();
-        return res.status(201).json({ message: 'Agendamento criado com sucesso.', appointment });
-    } catch (error) {
-        return res.status(500).json({ message: 'Erro ao criar agendamento.', error: error.message });
+  try {
+    const existingAppointment = await Appointment.findOne({ dateTime });
+    if (existingAppointment) {
+      return res.status(400).json({ message: 'Já existe um agendamento para este horário.' });
     }
+
+    // 🔍 Verifica se o paciente já existe
+    let patient = await Patient.findOne({ name: patientName });
+
+    // 👤 Se não existir, cria
+    if (!patient) {
+      patient = new Patient({ name: patientName, phone });
+      await patient.save();
+    }
+
+    // 💾 Cria o agendamento normalmente
+    const appointment = new Appointment({
+      patientName,
+      phone,
+      specialty,
+      dateTime,
+    });
+
+    await appointment.save();
+
+    return res.status(201).json({
+      message: 'Agendamento e paciente criados com sucesso.',
+      appointment,
+    });
+  } catch (error) {
+    console.error("Erro ao criar agendamento:", error);
+    return res.status(500).json({
+      message: 'Erro ao criar agendamento.',
+      error: error.message,
+    });
+  }
 };
+
 
 // Função para listar todos os agendamentos
 export const getAllAppointments = async (req, res) => {

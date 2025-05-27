@@ -4,7 +4,7 @@ import {
     getAllAppointments,
     getAppointmentsByPatient,
     updateAppointmentStatus,
-    deleteAppointment
+    deleteAppointment,
 } from '../controllers/appointmentController.js';
 
 const router = express.Router();
